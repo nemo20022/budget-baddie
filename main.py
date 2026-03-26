@@ -19,7 +19,7 @@ from fastapi import Depends, HTTPException, status
 import firebase_admin
 from firebase_admin import credentials, auth
 
-cred = credentials.Certificate("budget-baddie-firebase-adminsdk-fbsvc-cdbac8b7ef.json")
+cred = credentials.Certificate("budget-baddie-firebase-adminsdk-fbsvc-7dbf5e87f3.json")
 firebase_admin.initialize_app(cred)
 
 security = HTTPBearer()

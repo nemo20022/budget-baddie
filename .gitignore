@@ -2,4 +2,8 @@ __pycache__/
 *.pyc
 budget.db
 .env
+
+# 🔒 Firebase secrets
+firebase-key.json
 budget-baddie-firebase-adminsdk-*.json
+budget-baddie-firebase-adminsdk-fbsvc-7dbf5e87f3.json
