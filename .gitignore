@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 budget.db
 .env
+budget-baddie-firebase-adminsdk-*.json
