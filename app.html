@@ -601,8 +601,20 @@
 
         <div class="stat-card spent">
           <div class="stat-icon">🛍️</div>
-          <div class="stat-label">Total<br/>Spent</div>
+          <div class="stat-label">Total<br/>(Essential + Optional)</div>
           <div class="stat-value" id="spentText">$0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🏠</div>
+          <div class="stat-label">Essential<br/>Spent</div>
+          <div class="stat-value" id="essentialText">$0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🛍️</div>
+          <div class="stat-label">Optional<br/>Spent</div>
+          <div class="stat-value" id="optionalText">$0</div>
         </div>
 
         <div class="stat-card balance">
@@ -658,6 +670,15 @@
             <option>other</option>
           </select>
         </div>
+              <div class="form-group" style="margin-top:10px;">
+        <label class="form-label">⚖️ Type</label>
+        <div class="select-wrap">
+          <select id="type" class="form-input form-select">
+            <option value="optional">Optional (shopping, food)</option>
+            <option value="essential">Essential (rent, bills)</option>
+          </select>
+        </div>
+      </div>
       </div>
       <!-- ✅ FIX: onclick -->
       <button class="btn-submit btn-pink" onclick="addExpense()">+ Log Expense</button>
@@ -692,11 +713,25 @@ if (!token) {
   window.location.href = "login.html";
 }
 
+function parseJwt(token) {
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  return JSON.parse(atob(base64));
+}
+
+
+// ✅ SET USER EMAIL
+const userData = parseJwt(token);
+document.getElementById("userEmail").textContent = userData.email;
+
+
 // logout
 function logout() {
   localStorage.removeItem("token");
   window.location.href = "login.html";
 }
+
+
 
 // set budget
 async function setBudget() {
@@ -725,7 +760,8 @@ async function addExpense() {
     body: JSON.stringify({
       amount: parseInt(document.getElementById("amount").value),
       category_name: document.getElementById("category").value,
-      date: document.getElementById("date").value
+      date: document.getElementById("date").value,
+      type: document.getElementById("type").value   // ✅ REQUIRED FIX
     })
   });
 
@@ -739,16 +775,19 @@ async function loadBudget() {
   });
 
   const data = await res.json();
-
+  const totalSpent = data.essential_spent + data.optional_spent;
   document.getElementById("incomeText").textContent = "$" + data.income;
-  document.getElementById("spentText").textContent = "$" + data.total_spent;
+  document.getElementById("spentText").textContent = "$" + totalSpent;
   document.getElementById("remainingText").textContent = "$" + data.remaining;
 
   // progress bar
-  const percent = (data.total_spent / data.income) * 100;
+  const percent = (totalSpent / data.income) * 100;
   document.getElementById("progressBar").style.width = percent + "%";
   document.getElementById("progressPercent").textContent = Math.round(percent) + "% spent";
   document.getElementById("budgetLabel").textContent = "Budget: $" + data.income;
+
+  document.getElementById("essentialText").textContent = "$" + data.essential_spent;
+  document.getElementById("optionalText").textContent = "$" + data.optional_spent;
 }
 
 // load on start

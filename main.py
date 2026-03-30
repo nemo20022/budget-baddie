@@ -123,7 +123,8 @@ def create_expense(data: ExpenseRequest, user=Depends(verify_token)):
         user_id=db_user.id,
         amount=data.amount,
         category_id=category.id,
-        date=expense_date
+        date=expense_date,
+        type=data.type   # ✅ ADD THIS
     )
 
     db.add(new_expense)
@@ -221,7 +222,7 @@ def set_budget(data: BudgetRequest, user=Depends(verify_token)):
     new_budget = Budget(
         user_id=db_user.id,
         income=data.income,
-        month=current_month
+        month=current_month   # ✅ THIS IS THE KEY
     )
 
     db.add(new_budget)
@@ -257,18 +258,24 @@ def get_remaining_budget(user=Depends(verify_token)):
         Expense.user_id == db_user.id
     ).all()
 
+    # filter current month
     expenses = [
         e for e in expenses
         if e.date.month == now.month and e.date.year == now.year
     ]
 
-    total_spent = sum(exp.amount for exp in expenses)
+    # ✅ separate types
+    essential_spent = sum(e.amount for e in expenses if e.type == "essential")
+    optional_spent  = sum(e.amount for e in expenses if e.type == "optional")
 
-    remaining = budget.income - total_spent
+    # ✅ real logic
+    available_money = budget.income - essential_spent
+    remaining = available_money - optional_spent
 
     return {
         "income": budget.income,
-        "total_spent": total_spent,
+        "essential_spent": essential_spent,
+        "optional_spent": optional_spent,
         "remaining": remaining
     }
 

@@ -48,9 +48,10 @@ class Expense(Base):
 
     receipt_url = Column(String, nullable=True)
 
+    type = Column(String)   # ✅ ADD THIS LINE
+
     user = relationship("User", back_populates="expenses")
     category = relationship("Category", back_populates="expenses")
-
 
 # 💰 BUDGET
 class Budget(Base):
@@ -132,3 +133,4 @@ class ExpenseRequest(BaseModel):
     amount: int
     category_name: str
     date: str
+    type: str
