@@ -6,7 +6,7 @@ from models import User, Expense, Budget, Goal, Category, Reward, UserReward
 from models import ExpenseRequest, BudgetRequest
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
-
+import requests
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Depends, HTTPException, status
 
@@ -280,3 +280,19 @@ def create_goal(category_name: str, limit_amount: int, user=Depends(verify_token
     db.commit()
 
     return {"message": "Goal created"}
+
+@app.get("/quote")
+def get_quote():
+    try:
+        res = requests.get("https://zenquotes.io/api/random")
+        data = res.json()[0]
+
+        return {
+            "quote": data["q"],
+            "author": data["a"]
+        }
+    except:
+        return {
+            "quote": "Stay consistent, your future self is watching 👀",
+            "author": "Budget Baddie"
+        }

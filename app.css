@@ -129,7 +129,22 @@
       line-height: 1.7;
     }
     .greeting span { color: var(--pink-d); }
- 
+    
+    .quote {
+    font-family: 'Press Start 2P', monospace !important;
+    font-size: 9px !important;
+    color: var(--muted) !important;
+    line-height: 1.8 !important;
+    margin: 10px 0 24px !important;
+    opacity: 0.9;
+
+    display: block;
+    }
+
+    .quote span {
+    color: var(--pink-d) !important;
+    }
+
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;

@@ -51,6 +51,7 @@
 <main class="page">
  
   <h2 class="greeting">Good morning, <span>Baddie</span> ✨<br/>Here's your cozy corner.</h2>
+  <p id="quoteText" class="quote"></p>
  
   <div class="grid">
  
@@ -351,15 +352,32 @@ async function loadBudget() {
   document.getElementById("optionalText").textContent = "$" + optional;
 
   // ✅ SAFE PROGRESS CALC
-  const percent = income > 0 ? (totalSpent / income) * 100 : 0;
+  const budget = data.budget || 0;
 
+  // prevent division by zero
+  const percent = budget > 0 ? (totalSpent / budget) * 100 : 0;
+
+  if (percent > 100) {
+  document.getElementById("progressBar").style.background = "red";
+  }
   document.getElementById("progressBar").style.width = percent + "%";
   document.getElementById("progressPercent").textContent = Math.round(percent) + "% spent";
-  document.getElementById("budgetLabel").textContent = "Budget: $" + income;
-}
 
+  document.getElementById("budgetLabel").textContent = "Budget: $" + budget;
+  }
+
+async function loadQuote() {
+  const res = await fetch("http://127.0.0.1:8000/quote");
+  const data = await res.json();
+
+  document.getElementById("quoteText").textContent =
+    `"${data.quote}" — ${data.author}`;
+}
 // load on start
 loadBudget();
+loadQuote();
+
+
 </script>
 </body>
 </html>
