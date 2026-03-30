@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Baddie 💰</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+/* ───── COLORS ───── */
+:root{
+  --bg:#f5e9d3;
+  --card:#fffaf3;
+  --pink:#f4b8c1;
+  --pink-d:#e896a4;
+  --sage:#a8c5a0;
+  --sage-d:#7faa76;
+  --text:#5c4033;
+  --border:#e0cbb8;
+  --cream:#fdf6ec;
+  --brown-l:#c4a882;
+  --muted:#9e7e6e;
+}
+
+/* ───── BASE ───── */
+body{
+  margin:0;
+  font-family:'Nunito',sans-serif;
+  background:
+    repeating-linear-gradient(135deg,#f5e9d3 0px,#f5e9d3 20px,#efe2cc 20px,#efe2cc 40px);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* ───── CARD WRAP (for corners) ───── */
+.card-wrap{
+  position:relative;
+}
+
+/* ───── CARD ───── */
+.card{
+  background:var(--card);
+  padding:40px;
+  border-radius:20px;
+  width:320px;
+  text-align:center;
+  border:3px solid var(--border);
+  box-shadow:8px 8px 0 var(--border), 0 20px 40px rgba(0,0,0,0.1);
+  position:relative;
+  z-index:2;
+}
+
+/* ───── CORNERS (FIXED) ───── */
+.corner {
+  position: absolute;
+  width: 18px; height: 18px;
+  background: var(--pink);
+  border-radius: 3px;
+}
+.corner.tl { top: -6px; left: -6px; }
+.corner.tr { top: -6px; right: -6px; background: var(--sage); }
+.corner.bl { bottom: -6px; left: -6px; background: var(--sage); }
+.corner.br { bottom: -6px; right: -6px; background: var(--pink); }
+
+/* ───── FLOATING PIXELS ───── */
+.pixel{
+  position:absolute;
+  bottom:-10px;
+  border-radius:2px;
+  animation: float linear infinite;
+  opacity:0;
+}
+@keyframes float{
+  0%{transform: translateY(0);opacity: 0;}
+  10%{opacity: 0.8;}
+  90%{opacity: 0.6;}
+  100%{transform: translateY(-110vh);opacity: 0;}
+}
+
+/* ───── MASCOT ───── */
+.mascot{
+  margin-bottom:15px;
+}
+.mascot svg{
+  width:60px;
+  image-rendering:pixelated;
+}
+
+/* ───── TEXT ───── */
+h1{
+  font-family:'Press Start 2P';
+  font-size:14px;
+  margin-bottom:5px;
+}
+
+.subtitle{
+  font-size:12px;
+  color:#8b6f5e;
+  margin-bottom:25px;
+}
+
+.pixel-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.pixel-divider::before,
+.pixel-divider::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--border) 0, var(--border) 6px, transparent 6px, transparent 10px);
+}
+.pixel-divider span { font-size: 14px; }
+
+/* ───── FORM (CENTER FIX) ───── */
+.form-group{
+  width:100%;
+  text-align:left;
+  margin-bottom:16px;
+}
+
+.form-group label{
+  display:block;
+  font-size:10px;
+  font-family:'Press Start 2P';
+  color:#8b6f5e;
+  margin-bottom:6px;
+}
+
+/* ───── INPUTS (FIXED ALIGNMENT + STYLE) ───── */
+input{
+  width:100%;
+  padding:13px 16px;
+  border-radius:10px;
+  border:2px solid var(--border);
+  background:var(--cream);
+  font-size:14px;
+  box-sizing:border-box;
+}
+
+input::placeholder{
+  color:var(--brown-l);
+}
+
+/* focus style */
+input:focus{
+  outline:none;
+  border-color:var(--pink-d);
+  box-shadow:0 0 0 3px #f4b8c140;
+}
+
+/* ───── BUTTONS ───── */
+.buttons{
+  display:flex;
+  gap:10px;
+  margin-top:20px;
+}
+
+button{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-family:'Press Start 2P';
+  font-size:10px;
+  cursor:pointer;
+}
+
+.login{
+  background:var(--pink);
+  box-shadow:0 4px 0 var(--pink-d);
+}
+
+.signup{
+  background:var(--sage);
+  box-shadow:0 4px 0 var(--sage-d);
+}
+
+button:active{
+  transform:translateY(2px);
+  box-shadow:none;
+}
+
+/* ───── FOOTER ───── */
+.footer-note {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+.footer-note a {
+  color: var(--pink-d);
+  text-decoration: none;
+  font-weight: 700;
+}
+.footer-note a:hover { text-decoration: underline; }
+
+</style>
+</head>
+
+<body>
+
+<script>
+for(let i=0;i<60;i++){
+  let p=document.createElement("div");
+  p.className="pixel";
+
+  p.style.left=Math.random()*100+"%";
+  p.style.width=p.style.height=(4+Math.random()*6)+"px";
+  p.style.background=["#f4b8c1","#a8c5a0","#c4a882","#e896a4"][Math.floor(Math.random()*4)];
+  p.style.animationDuration=(8+Math.random()*8)+"s";
+  p.style.animationDelay=Math.random()*6+"s";
+
+  document.body.appendChild(p);
+}
+</script>
+
+<!-- WRAP ADDED -->
+<div class="card-wrap">
+
+  <!-- corners -->
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <div class="card">
+
+    <div class="mascot">
+      <!-- same svg -->
+      <svg viewBox="0 0 16 16">
+        <rect x="4" y="7" width="8" height="7" fill="#c4a882"/>
+        <rect x="3" y="3" width="10" height="6" fill="#e8d5b7"/>
+        <rect x="3" y="2" width="3" height="3" fill="#c4a882"/>
+        <rect x="10" y="2" width="3" height="3" fill="#c4a882"/>
+        <rect x="7" y="3" width="2" height="4" fill="#fff"/>
+        <rect x="5" y="4" width="2" height="2" fill="#5c4033"/>
+        <rect x="9" y="4" width="2" height="2" fill="#5c4033"/>
+        <rect x="5" y="4" width="1" height="1" fill="#fff"/>
+        <rect x="9" y="4" width="1" height="1" fill="#fff"/>
+        <rect x="7" y="6" width="2" height="1" fill="#e896a4"/>
+        <rect x="5" y="9" width="6" height="4" fill="#f4b8c1"/>
+        <rect x="6" y="8" width="4" height="2" fill="#e896a4"/>
+        <rect x="7" y="10" width="2" height="1" fill="#8b6f5e"/>
+        <rect x="4" y="13" width="3" height="2" fill="#c4a882"/>
+        <rect x="9" y="13" width="3" height="2" fill="#c4a882"/>
+        <rect x="3" y="14" width="4" height="1" fill="#8b6f5e"/>
+        <rect x="9" y="14" width="4" height="1" fill="#8b6f5e"/>
+      </svg>
+    </div>
+
+    <h1>Budget Baddie 💰</h1>
+    <div class="subtitle">your cozy money companion ✨</div>
+
+    <div class="pixel-divider"><span>🌿</span></div>
+
+    <!-- FIXED INPUT STRUCTURE -->
+    <div class="form-group">
+      <label>✉ Email</label>
+      <input id="email" placeholder="baddie@cozy.home">
+    </div>
+
+    <div class="form-group">
+      <label>🔑 Password</label>
+      <input id="password" type="password" placeholder="••••••••">
+    </div>
+
+    <div class="buttons">
+      <button class="login" onclick="login()">Login</button>
+      <button class="signup" onclick="signUp()">Sign Up</button>
+    </div>
+
+    <p class="footer-note">
+      Forgot your password? <a href="#">Reset it ↗</a>
+    </p>
+
+  </div>
+</div>
+
+<!-- FIREBASE (UNCHANGED) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } 
+from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBKY1pPnizluRzTfUPv5ecXdJUc9MgvDDU",
+  authDomain: "budget-baddie.firebaseapp.com",
+  projectId: "budget-baddie",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.signUp = async () => {
+  try {
+    await createUserWithEmailAndPassword(auth, email.value, password.value);
+    alert("Signup successful!");
+  } catch (e) {
+    alert(e.message);
+  }
+};
+
+window.login = async () => {
+  try {
+    const user = await signInWithEmailAndPassword(auth, email.value, password.value);
+    const token = await user.user.getIdToken();
+
+    localStorage.setItem("token", token);
+
+    await fetch("http://127.0.0.1:8000/users/sync", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + token }
+    });
+
+    window.location.href = "app.html";
+
+  } catch (e) {
+    alert(e.message);
+  }
+};
+</script>
+
+</body>
+</html>
