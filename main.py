@@ -2,15 +2,9 @@ from fastapi import FastAPI
 from database import engine
 import models
 from database import SessionLocal
-from models import User
-from models import Expense
+from models import User, Expense, Budget, Goal, Category, Reward, UserReward
+from models import ExpenseRequest, BudgetRequest
 from datetime import datetime
-from models import Budget
-from models import Goal
-from models import Category
-from models import ExpenseRequest
-from models import Reward, UserReward
-from models import BudgetRequest
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -24,6 +18,7 @@ firebase_admin.initialize_app(cred)
 
 security = HTTPBearer()
 
+# ✅ TOKEN VERIFY (unchanged)
 def verify_token(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
@@ -38,12 +33,19 @@ def verify_token(
             detail="Invalid token",
         )
 
+# ✅ DB DEPENDENCY (NEW)
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow your frontend
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,24 +53,21 @@ app.add_middleware(
 
 models.Base.metadata.create_all(bind=engine)
 
-
+# ---------------- USERS ----------------
 
 @app.post("/users")
-def create_user(email: str, password: str):
-    db=SessionLocal()
-
+def create_user(email: str, password: str, db=Depends(get_db)):
     new_user = User(email=email, password=password)
 
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    return {"message":"User created","user_id":new_user.id}
+    return {"message": "User created", "user_id": new_user.id}
+
 
 @app.post("/users/sync")
-def sync_user(user=Depends(verify_token)):
-    db = SessionLocal()
-
+def sync_user(user=Depends(verify_token), db=Depends(get_db)):
     firebase_uid = user["uid"]
     email = user.get("email")
 
@@ -89,18 +88,15 @@ def sync_user(user=Depends(verify_token)):
 
     return {"message": "User synced", "user_id": new_user.id}
 
+
 @app.get("/users")
-def get_users():
-    db=SessionLocal()
+def get_users(db=Depends(get_db)):
+    return db.query(User).all()
 
-    users=db.query(User).all()
-
-    return users
+# ---------------- EXPENSES ----------------
 
 @app.post("/expenses")
-def create_expense(data: ExpenseRequest, user=Depends(verify_token)):
-    db = SessionLocal()
-
+def create_expense(data: ExpenseRequest, user=Depends(verify_token), db=Depends(get_db)):
     firebase_uid = user["uid"]
 
     db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
@@ -108,7 +104,6 @@ def create_expense(data: ExpenseRequest, user=Depends(verify_token)):
     if not db_user:
         return {"error": "User not found"}
 
-    # find or create category
     category = db.query(Category).filter(Category.name == data.category_name).first()
 
     if not category:
@@ -124,7 +119,7 @@ def create_expense(data: ExpenseRequest, user=Depends(verify_token)):
         amount=data.amount,
         category_id=category.id,
         date=expense_date,
-        type=data.type   # ✅ ADD THIS
+        type=data.type
     )
 
     db.add(new_expense)
@@ -132,26 +127,21 @@ def create_expense(data: ExpenseRequest, user=Depends(verify_token)):
 
     return {"message": "Expense added"}
 
-
+# ---------------- STATS ----------------
 
 @app.get("/stats/total")
-def get_total_spending(user=Depends(verify_token)):
-    db = SessionLocal()
-
+def get_total_spending(user=Depends(verify_token), db=Depends(get_db)):
     firebase_uid = user["uid"]
     db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
 
     expenses = db.query(Expense).filter(Expense.user_id == db_user.id).all()
-
     total = sum(exp.amount for exp in expenses)
 
     return {"total_spent": total}
 
 
 @app.get("/stats/category")
-def get_category_stats(user=Depends(verify_token)):
-    db = SessionLocal()
-
+def get_category_stats(user=Depends(verify_token), db=Depends(get_db)):
     firebase_uid = user["uid"]
     db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
 
@@ -169,47 +159,10 @@ def get_category_stats(user=Depends(verify_token)):
 
     return category_totals
 
-@app.get("/stats/month-comparison")
-def month_comparison(user_id: int):
-    db = SessionLocal()
-
-    expenses = db.query(Expense).filter(Expense.user_id == user_id).all()
-
-    now = datetime.now()
-    current_month = now.month
-    current_year = now.year
-
-    last_month = current_month - 1
-    last_month_year = current_year
-
-    if last_month == 0:
-        last_month = 12
-        last_month_year -= 1
-
-    current_total = 0
-    last_total = 0
-
-    for expense in expenses:
-        expense_date = expense.date   # already a date object
-
-        if expense_date.month == current_month and expense_date.year == current_year:
-            current_total += expense.amount
-
-        elif expense_date.month == last_month and expense_date.year == last_month_year:
-            last_total += expense.amount
-
-    difference = current_total - last_total
-
-    return {
-        "current_month": current_total,
-        "last_month": last_total,
-        "difference": difference
-    }
+# ---------------- BUDGET ----------------
 
 @app.post("/budget")
-def set_budget(data: BudgetRequest, user=Depends(verify_token)):
-    db = SessionLocal()
-
+def set_budget(data: BudgetRequest, user=Depends(verify_token), db=Depends(get_db)):
     firebase_uid = user["uid"]
 
     db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
@@ -219,22 +172,33 @@ def set_budget(data: BudgetRequest, user=Depends(verify_token)):
 
     current_month = datetime.now().strftime("%Y-%m")
 
-    new_budget = Budget(
-        user_id=db_user.id,
-        income=data.income,
-        month=current_month   # ✅ THIS IS THE KEY
-    )
+    existing_budget = db.query(Budget).filter(
+        Budget.user_id == db_user.id,
+        Budget.month == current_month
+    ).first()
 
-    db.add(new_budget)
-    db.commit()
-    db.refresh(new_budget)
+    if existing_budget:
+        existing_budget.income = data.income
+        existing_budget.allowance = data.allowance
+        db.commit()
+        return {"message": "Budget updated"}
 
-    return {"message": "Budget set"}
+    else:
+        new_budget = Budget(
+            user_id=db_user.id,
+            income=data.income,
+            allowance=data.allowance,
+            month=current_month
+        )
+        db.add(new_budget)
+        db.commit()
+        db.refresh(new_budget)
+
+        return {"message": "Budget created"}
+
 
 @app.get("/budget/remaining")
-def get_remaining_budget(user=Depends(verify_token)):
-    db = SessionLocal()
-
+def get_remaining_budget(user=Depends(verify_token), db=Depends(get_db)):
     firebase_uid = user["uid"]
 
     db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
@@ -258,31 +222,32 @@ def get_remaining_budget(user=Depends(verify_token)):
         Expense.user_id == db_user.id
     ).all()
 
-    # filter current month
     expenses = [
         e for e in expenses
         if e.date.month == now.month and e.date.year == now.year
     ]
 
-    # ✅ separate types
     essential_spent = sum(e.amount for e in expenses if e.type == "essential")
     optional_spent  = sum(e.amount for e in expenses if e.type == "optional")
 
-    # ✅ real logic
     available_money = budget.income - essential_spent
-    remaining = available_money - optional_spent
+
+    allowance = budget.allowance or 0
+    remaining = allowance - optional_spent
 
     return {
         "income": budget.income,
+        "budget": allowance,
         "essential_spent": essential_spent,
         "optional_spent": optional_spent,
+        "available": available_money,
         "remaining": remaining
     }
 
-@app.get("/expenses")
-def get_expenses(user=Depends(verify_token)):
-    db = SessionLocal()
+# ---------------- EXPENSE LIST ----------------
 
+@app.get("/expenses")
+def get_expenses(user=Depends(verify_token), db=Depends(get_db)):
     firebase_uid = user["uid"]
 
     db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
@@ -290,14 +255,12 @@ def get_expenses(user=Depends(verify_token)):
     if not db_user:
         return {"error": "User not found"}
 
-    expenses = db.query(Expense).filter(Expense.user_id == db_user.id).all()
+    return db.query(Expense).filter(Expense.user_id == db_user.id).all()
 
-    return expenses
+# ---------------- GOALS ----------------
 
 @app.post("/goals")
-def create_goal(category_name: str, limit_amount: int, user=Depends(verify_token)):
-    db = SessionLocal()
-
+def create_goal(category_name: str, limit_amount: int, user=Depends(verify_token), db=Depends(get_db)):
     firebase_uid = user["uid"]
     db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
 
@@ -317,69 +280,3 @@ def create_goal(category_name: str, limit_amount: int, user=Depends(verify_token
     db.commit()
 
     return {"message": "Goal created"}
-
-@app.get("/goals/check")
-def check_goal(user_id: int, category_name: str):
-    db = SessionLocal()
-
-    # find category
-    category = db.query(Category).filter(Category.name == category_name).first()
-
-    if not category:
-        return {"error": "Category not found"}
-
-    # get goal
-    goal = db.query(Goal).filter(
-        Goal.user_id == user_id,
-        Goal.category_id == category.id
-    ).first()
-
-    if not goal:
-        return {"error": "No goal found"}
-
-    # get expenses
-    expenses = db.query(Expense).filter(
-        Expense.user_id == user_id,
-        Expense.category_id == category.id
-    ).all()
-
-    total_spent = sum(exp.amount for exp in expenses)
-
-    if total_spent <= goal.limit_amount:
-        status = "Goal achieved"
-
-        reward = db.query(Reward).first()
-
-        if not reward:
-            reward = Reward(
-                name="Savings Star",
-                description="You stayed within your budget!"
-            )
-            db.add(reward)
-            db.commit()
-            db.refresh(reward)
-
-        existing = db.query(UserReward).filter(
-            UserReward.user_id == user_id,
-            UserReward.reward_id == reward.id
-        ).first()
-
-        if not existing:
-            user_reward = UserReward(
-                user_id=user_id,
-                reward_id=reward.id
-            )
-            db.add(user_reward)
-            db.commit()
-
-    else:
-        status = "Goal exceeded"
-
-    return {
-        "category": category.name,
-        "limit": goal.limit_amount,
-        "spent": total_spent,
-        "status": status
-    }
-
-

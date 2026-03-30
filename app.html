@@ -684,23 +684,29 @@
       <button class="btn-submit btn-pink" onclick="addExpense()">+ Log Expense</button>
     </div>
  
-     <!-- SET BUDGET -->
-    <div class="card card-setbudget">
+     <div class="card card-setbudget">
       <div class="card-title">
         <span class="icon">🎯</span>
         Set Budget
       </div>
 
+      <!-- 💰 INCOME -->
       <div class="form-group" style="margin-top:14px;">
-        <label class="form-label">💵 Monthly Budget ($)</label>
-        <!-- ✅ ID -->
-        <input id="income" class="form-input" type="number" placeholder="e.g. 3200" />
+        <label class="form-label">💰 Monthly Income ($)</label>
+        <input id="income" class="form-input" type="number" placeholder="e.g. 5000" />
       </div>
 
-      <!-- ✅ FIX -->
+      <!-- 🎯 SPENDING BUDGET -->
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">🎯 Spending Budget ($)</label>
+        <input id="allowance" class="form-input" type="number" placeholder="e.g. 2000" />
+      </div>
+
       <button class="btn-submit btn-sage" onclick="setBudget()">Save Budget ✓</button>
 
-      <p class="budget-hint">🌿 Tip: Saving even 10% each month unlocks new room items!</p>
+      <p class="budget-hint">
+        🌿 Tip: Income = all your money. Budget = how much you allow yourself to spend ✨
+      </p>
     </div>
 
   </div>
@@ -735,23 +741,36 @@ function logout() {
 
 // set budget
 async function setBudget() {
-  await fetch("http://127.0.0.1:8000/budget", {
+  const res = await fetch("http://127.0.0.1:8000/budget", {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + token,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      income: parseInt(document.getElementById("income").value)
+      income: parseInt(document.getElementById("income").value),
+      allowance: parseInt(document.getElementById("allowance").value)
     })
   });
 
+  // ✅ HANDLE ERRORS
+  if (!res.ok) {
+    const err = await res.text();
+    alert("Error saving budget: " + err);
+    return;
+  }
+
+  // ✅ CLEAR INPUTS (optional but good UX)
+  document.getElementById("income").value = "";
+  document.getElementById("allowance").value = "";
+
+  // ✅ reload data AFTER success
   loadBudget();
 }
 
 // add expense
 async function addExpense() {
-  await fetch("http://127.0.0.1:8000/expenses", {
+  const res = await fetch("http://127.0.0.1:8000/expenses", {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + token,
@@ -761,10 +780,24 @@ async function addExpense() {
       amount: parseInt(document.getElementById("amount").value),
       category_name: document.getElementById("category").value,
       date: document.getElementById("date").value,
-      type: document.getElementById("type").value   // ✅ REQUIRED FIX
+      type: document.getElementById("type").value
     })
   });
 
+  // ✅ HANDLE ERRORS
+  if (!res.ok) {
+    const err = await res.text();
+    alert("Error adding expense: " + err);
+    return;
+  }
+
+  // ✅ CLEAR INPUTS (important UX + prevents duplicate sends)
+  document.getElementById("amount").value = "";
+  document.getElementById("category").value = "";
+  document.getElementById("date").value = "";
+  document.getElementById("type").value = "optional";
+
+  // ✅ reload data AFTER success
   loadBudget();
 }
 
@@ -774,20 +807,52 @@ async function loadBudget() {
     headers: { "Authorization": "Bearer " + token }
   });
 
-  const data = await res.json();
-  const totalSpent = data.essential_spent + data.optional_spent;
-  document.getElementById("incomeText").textContent = "$" + data.income;
-  document.getElementById("spentText").textContent = "$" + totalSpent;
-  document.getElementById("remainingText").textContent = "$" + data.remaining;
+  // ✅ HANDLE API ERROR
+  if (!res.ok) {
+    const err = await res.text();
+    console.error("Load error:", err);
+    return;
+  }
 
-  // progress bar
-  const percent = (totalSpent / data.income) * 100;
+  const data = await res.json();
+
+  // ✅ HANDLE BACKEND ERROR RESPONSE
+  if (data.error) {
+    console.warn(data.error);
+
+    document.getElementById("incomeText").textContent = "$0";
+    document.getElementById("spentText").textContent = "$0";
+    document.getElementById("remainingText").textContent = "$0";
+    document.getElementById("essentialText").textContent = "$0";
+    document.getElementById("optionalText").textContent = "$0";
+    document.getElementById("progressBar").style.width = "0%";
+    document.getElementById("progressPercent").textContent = "0% spent";
+    document.getElementById("budgetLabel").textContent = "Budget: $0";
+
+    return;
+  }
+
+  // ✅ SAFE FALLBACKS (prevents NaN)
+  const income = data.income || 0;
+  const essential = data.essential_spent || 0;
+  const optional = data.optional_spent || 0;
+  const remaining = data.remaining || 0;
+
+  const totalSpent = essential + optional;
+
+  // ✅ UPDATE UI
+  document.getElementById("incomeText").textContent = "$" + income;
+  document.getElementById("spentText").textContent = "$" + totalSpent;
+  document.getElementById("remainingText").textContent = "$" + remaining;
+  document.getElementById("essentialText").textContent = "$" + essential;
+  document.getElementById("optionalText").textContent = "$" + optional;
+
+  // ✅ SAFE PROGRESS CALC
+  const percent = income > 0 ? (totalSpent / income) * 100 : 0;
+
   document.getElementById("progressBar").style.width = percent + "%";
   document.getElementById("progressPercent").textContent = Math.round(percent) + "% spent";
-  document.getElementById("budgetLabel").textContent = "Budget: $" + data.income;
-
-  document.getElementById("essentialText").textContent = "$" + data.essential_spent;
-  document.getElementById("optionalText").textContent = "$" + data.optional_spent;
+  document.getElementById("budgetLabel").textContent = "Budget: $" + income;
 }
 
 // load on start

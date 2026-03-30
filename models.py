@@ -128,6 +128,7 @@ class UserReward(Base):
     
 class BudgetRequest(BaseModel):
     income: int
+    allowance: int
     
 class ExpenseRequest(BaseModel):
     amount: int
