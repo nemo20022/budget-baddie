@@ -511,3 +511,171 @@
       .card { padding: 20px 16px; }
       .greeting { font-size: 10px; }
     }
+
+
+    .reward-item {
+  position: absolute;
+  display: none;
+}
+
+/* Stage 1 - Lamp */
+.lamp {
+  position: absolute;
+  bottom: 28%;
+  left: 120px;
+
+  width: 10px;
+  height: 26px;
+  background: #9e7e6e;
+  border: 2px solid #5c4033;
+}
+
+/* lampshade */
+.lamp::before {
+  content: '';
+  position: absolute;
+  top: -14px;
+  left: -10px;
+
+  width: 30px;
+  height: 14px;
+  background: #ffd27f;
+  border: 2px solid #c9a44e;
+  border-radius: 3px;
+}
+
+/* base */
+.lamp::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: -6px;
+
+  width: 22px;
+  height: 6px;
+  background: #c4a882;
+  border: 2px solid #8b6f5e;
+}
+
+/* Stage 2 - Cat */
+.cat {
+  position: absolute;
+  bottom: 28%;
+  left: 170px;
+
+  width: 22px;
+  height: 14px;
+  background: #e896a4;
+  border-radius: 4px;
+  border: 2px solid #5c4033;
+}
+
+/* ears */
+.cat::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 2px;
+
+  width: 6px;
+  height: 6px;
+  background: #e896a4;
+  transform: rotate(45deg);
+  border: 2px solid #5c4033;
+}
+
+/* face */
+.cat::after {
+  content: '• •';
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  font-size: 6px;
+  color: #5c4033;
+}
+
+/* Stage 3 - Shelf */
+.shelf {
+  position: absolute;
+  top: 40px;
+  left: 20px;
+
+  width: 80px;
+  height: 8px;
+  background: #c4a882;
+  border: 2px solid #8b6f5e;
+}
+
+/* books */
+.shelf::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: -14px;
+
+  width: 6px;
+  height: 14px;
+  background: #f4b8c1;
+  box-shadow:
+    10px 0 #a8c5a0,
+    20px 0 #c5dff4;
+}
+
+/* Stage 4 - Extra plant */
+.plant2 {
+  position: absolute;
+  bottom: 28%;
+  right: 80px;
+
+  width: 14px;
+  height: 24px;
+  background: #7faa76;
+  border: 2px solid #5c4033;
+}
+
+/* big leaf */
+.plant2::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -8px;
+
+  width: 18px;
+  height: 12px;
+  background: #a8c5a0;
+  border-radius: 50% 0 50% 0;
+  transform: rotate(-20deg);
+}
+
+/* pot */
+.plant2::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: -6px;
+
+  width: 22px;
+  height: 10px;
+  background: #c4a882;
+  border: 2px solid #8b6f5e;
+}
+/* Stage 5 - Poster */
+.poster {
+  position: absolute;
+  top: 20px;
+  left: 110px;
+
+  width: 40px;
+  height: 50px;
+  background: linear-gradient(135deg, #f4b8c1, #d5c8f0);
+  border: 3px solid #e896a4;
+}
+
+/* cute heart inside */
+.poster::after {
+  content: '💖';
+  position: absolute;
+  top: 10px;
+  left: 8px;
+  font-size: 16px;
+}

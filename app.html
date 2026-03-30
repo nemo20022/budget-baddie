@@ -80,11 +80,17 @@
         <div class="plant-leaf2"></div>
         <div class="rug"></div>
         <div class="coin"></div>
+        <!-- 🎁 REWARD ITEMS (initially hidden) -->
+        <div class="reward-item lamp" id="reward1"></div>
+        <div class="reward-item cat" id="reward2"></div>
+        <div class="reward-item shelf" id="reward3"></div>
+        <div class="reward-item plant2" id="reward4"></div>
+        <div class="reward-item poster" id="reward5"></div>
       </div>
  
       <div class="room-label">
-        <span>🌱 Level 3 Cozy Den</span>
-        <span class="room-badge">2 items unlocked</span>
+        <span id="levelText">🌱 Level 1 Cozy Den</span>
+        <span id="itemsText" class="room-badge">0 items unlocked</span>
       </div>
     </div>
  
@@ -373,9 +379,49 @@ async function loadQuote() {
   document.getElementById("quoteText").textContent =
     `"${data.quote}" — ${data.author}`;
 }
+
+
+async function loadRewards() {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch("http://127.0.0.1:8000/rewards", {
+    headers: {
+      "Authorization": "Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+
+  const stage = data.stage;
+
+  // ✅ stage names (ADD THIS HERE)
+  const names = [
+    "Empty Room",
+    "Starter Den",
+    "Cozy Den",
+    "Aesthetic Room",
+    "Dream Space",
+    "Ultimate Baddie Room"
+  ];
+
+  // show unlocked items
+  for (let i = 1; i <= stage; i++) {
+    const el = document.getElementById("reward" + i);
+    if (el) el.style.display = "block";
+  }
+
+  // update UI text
+  document.getElementById("levelText").innerText =
+    `🌱 Level ${stage} ${names[stage]}`;
+
+  document.getElementById("itemsText").innerText =
+    `${stage} item${stage > 1 ? "s" : ""} unlocked`;
+}
+
 // load on start
 loadBudget();
 loadQuote();
+loadRewards();
 
 
 </script>

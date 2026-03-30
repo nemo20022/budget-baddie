@@ -273,6 +273,7 @@ def create_goal(category_name: str, limit_amount: int, user=Depends(verify_token
         user_id=db_user.id,
         category_id=category.id,
         limit_amount=limit_amount,
+        month=datetime.now().strftime("%Y-%m"),  # ✅ ADD THIS
         status="in_progress"
     )
 
@@ -296,3 +297,68 @@ def get_quote():
             "quote": "Stay consistent, your future self is watching 👀",
             "author": "Budget Baddie"
         }
+
+@app.get("/goals/check")
+def check_goal(user=Depends(verify_token), db=Depends(get_db)):
+    firebase_uid = user["uid"]
+
+    db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+
+    if not db_user:
+        return {"error": "User not found"}
+
+    goals = db.query(Goal).filter(Goal.user_id == db_user.id).all()
+
+    results = []
+
+    for goal in goals:
+        expenses = db.query(Expense).filter(
+            Expense.user_id == db_user.id,
+            Expense.category_id == goal.category_id
+        ).all()
+
+        total_spent = sum(exp.amount for exp in expenses)
+
+        if total_spent <= goal.limit_amount:
+            goal.status = "completed"   # ✅ THIS IS THE CRITICAL LINE
+            db.commit()
+            status = "Goal achieved"
+        else:
+            goal.status = "failed"
+            db.commit()
+            status = "Goal exceeded"
+
+        results.append({
+            "category_id": goal.category_id,
+            "limit": goal.limit_amount,
+            "spent": total_spent,
+            "status": status
+        })
+
+    return results
+
+@app.get("/rewards")
+def get_stage(user=Depends(verify_token), db=Depends(get_db)):
+    firebase_uid = user["uid"]
+
+    db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+
+    if not db_user:
+        return {"error": "User not found"}
+
+    # count completed goals
+    completed_goals = db.query(Goal).filter(
+        Goal.user_id == db_user.id,
+        Goal.status == "completed"
+    ).count()
+
+    # stage system (max 5)
+    # stage = min(completed_goals, 5)
+    
+    # test stage
+    stage = 4
+
+    return {
+        "stage": stage,
+        "completed_goals": completed_goals
+    }
