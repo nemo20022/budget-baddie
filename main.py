@@ -117,7 +117,7 @@ def create_expense(data: ExpenseRequest, user=Depends(verify_token)):
         db.commit()
         db.refresh(category)
 
-    expense_date = datetime.strptime(data.date, "%Y-%m-%d")
+    expense_date = datetime.strptime(data.date, "%Y-%m-%d").date()
 
     new_expense = Expense(
         user_id=db_user.id,
@@ -132,46 +132,39 @@ def create_expense(data: ExpenseRequest, user=Depends(verify_token)):
     return {"message": "Expense added"}
 
 
-@app.get("/expenses")
-def get_expenses(user_id: int):
-    db=SessionLocal()
-
-    expenses=db.query(Expense).filter(Expense.user_id == user_id).all()
-
-    return expenses
-
 
 @app.get("/stats/total")
-def get_total_spending(user_id: int):
-    db =SessionLocal()
+def get_total_spending(user=Depends(verify_token)):
+    db = SessionLocal()
 
-    expenses=db.query(Expense).filter(Expense.user_id == user_id).all()
+    firebase_uid = user["uid"]
+    db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
 
-    total =0
-    for expense in expenses:
-        total += expense.amount
+    expenses = db.query(Expense).filter(Expense.user_id == db_user.id).all()
 
-    return {"user_id":user_id,"total_spent": total}
+    total = sum(exp.amount for exp in expenses)
+
+    return {"total_spent": total}
 
 
 @app.get("/stats/category")
-def get_category_stats(user_id: int):
+def get_category_stats(user=Depends(verify_token)):
     db = SessionLocal()
+
+    firebase_uid = user["uid"]
+    db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
 
     results = (
         db.query(Category.name, Expense.amount)
         .join(Expense, Expense.category_id == Category.id)
-        .filter(Expense.user_id == user_id)
+        .filter(Expense.user_id == db_user.id)
         .all()
     )
 
     category_totals = {}
 
     for name, amount in results:
-        if name in category_totals:
-            category_totals[name] += amount
-        else:
-            category_totals[name] = amount
+        category_totals[name] = category_totals.get(name, 0) + amount
 
     return category_totals
 
@@ -223,9 +216,12 @@ def set_budget(data: BudgetRequest, user=Depends(verify_token)):
     if not db_user:
         return {"error": "User not found"}
 
+    current_month = datetime.now().strftime("%Y-%m")
+
     new_budget = Budget(
         user_id=db_user.id,
-        income=data.income
+        income=data.income,
+        month=current_month
     )
 
     db.add(new_budget)
@@ -245,18 +241,26 @@ def get_remaining_budget(user=Depends(verify_token)):
     if not db_user:
         return {"error": "User not found"}
 
-    # get latest budget
-    budget = (
-        db.query(Budget)
-        .filter(Budget.user_id == db_user.id)
-        .order_by(Budget.id.desc())
-        .first()
-    )
+    current_month = datetime.now().strftime("%Y-%m")
+
+    budget = db.query(Budget).filter(
+        Budget.user_id == db_user.id,
+        Budget.month == current_month
+    ).first()
 
     if not budget:
         return {"error": "No budget found"}
 
-    expenses = db.query(Expense).filter(Expense.user_id == db_user.id).all()
+    now = datetime.now()
+
+    expenses = db.query(Expense).filter(
+        Expense.user_id == db_user.id
+    ).all()
+
+    expenses = [
+        e for e in expenses
+        if e.date.month == now.month and e.date.year == now.year
+    ]
 
     total_spent = sum(exp.amount for exp in expenses)
 
@@ -284,17 +288,19 @@ def get_expenses(user=Depends(verify_token)):
     return expenses
 
 @app.post("/goals")
-def create_goal(user_id: int, category_name: str, limit_amount: int):
+def create_goal(category_name: str, limit_amount: int, user=Depends(verify_token)):
     db = SessionLocal()
 
-    # find category
+    firebase_uid = user["uid"]
+    db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+
     category = db.query(Category).filter(Category.name == category_name).first()
 
     if not category:
         return {"error": "Category not found"}
 
     new_goal = Goal(
-        user_id=user_id,
+        user_id=db_user.id,
         category_id=category.id,
         limit_amount=limit_amount,
         status="in_progress"
@@ -302,9 +308,8 @@ def create_goal(user_id: int, category_name: str, limit_amount: int):
 
     db.add(new_goal)
     db.commit()
-    db.refresh(new_goal)
 
-    return {"message": "Goal created", "goal_id": new_goal.id}
+    return {"message": "Goal created"}
 
 @app.get("/goals/check")
 def check_goal(user_id: int, category_name: str):
