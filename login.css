@@ -1,0 +1,193 @@
+/* ───── COLORS ───── */
+:root{
+  --bg:#f5e9d3;
+  --card:#fffaf3;
+  --pink:#f4b8c1;
+  --pink-d:#e896a4;
+  --sage:#a8c5a0;
+  --sage-d:#7faa76;
+  --text:#5c4033;
+  --border:#e0cbb8;
+  --cream:#fdf6ec;
+  --brown-l:#c4a882;
+  --muted:#9e7e6e;
+}
+
+/* ───── BASE ───── */
+body{
+  margin:0;
+  font-family:'Nunito',sans-serif;
+  background:
+    repeating-linear-gradient(135deg,#f5e9d3 0px,#f5e9d3 20px,#efe2cc 20px,#efe2cc 40px);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* ───── CARD WRAP (for corners) ───── */
+.card-wrap{
+  position:relative;
+}
+
+/* ───── CARD ───── */
+.card{
+  background:var(--card);
+  padding:40px;
+  border-radius:20px;
+  width:320px;
+  text-align:center;
+  border:3px solid var(--border);
+  box-shadow:8px 8px 0 var(--border), 0 20px 40px rgba(0,0,0,0.1);
+  position:relative;
+  z-index:2;
+}
+
+/* ───── CORNERS (FIXED) ───── */
+.corner {
+  position: absolute;
+  width: 18px; height: 18px;
+  background: var(--pink);
+  border-radius: 3px;
+}
+.corner.tl { top: -6px; left: -6px; }
+.corner.tr { top: -6px; right: -6px; background: var(--sage); }
+.corner.bl { bottom: -6px; left: -6px; background: var(--sage); }
+.corner.br { bottom: -6px; right: -6px; background: var(--pink); }
+
+/* ───── FLOATING PIXELS ───── */
+.pixel{
+  position:absolute;
+  bottom:-10px;
+  border-radius:2px;
+  animation: float linear infinite;
+  opacity:0;
+}
+@keyframes float{
+  0%{transform: translateY(0);opacity: 0;}
+  10%{opacity: 0.8;}
+  90%{opacity: 0.6;}
+  100%{transform: translateY(-110vh);opacity: 0;}
+}
+
+/* ───── MASCOT ───── */
+.mascot{
+  margin-bottom:15px;
+}
+.mascot svg{
+  width:60px;
+  image-rendering:pixelated;
+}
+
+/* ───── TEXT ───── */
+h1{
+  font-family:'Press Start 2P';
+  font-size:14px;
+  margin-bottom:5px;
+}
+
+.subtitle{
+  font-size:12px;
+  color:#8b6f5e;
+  margin-bottom:25px;
+}
+
+.pixel-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.pixel-divider::before,
+.pixel-divider::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--border) 0, var(--border) 6px, transparent 6px, transparent 10px);
+}
+.pixel-divider span { font-size: 14px; }
+
+/* ───── FORM (CENTER FIX) ───── */
+.form-group{
+  width:100%;
+  text-align:left;
+  margin-bottom:16px;
+}
+
+.form-group label{
+  display:block;
+  font-size:10px;
+  font-family:'Press Start 2P';
+  color:#8b6f5e;
+  margin-bottom:6px;
+}
+
+/* ───── INPUTS (FIXED ALIGNMENT + STYLE) ───── */
+input{
+  width:100%;
+  padding:13px 16px;
+  border-radius:10px;
+  border:2px solid var(--border);
+  background:var(--cream);
+  font-size:14px;
+  box-sizing:border-box;
+}
+
+input::placeholder{
+  color:var(--brown-l);
+}
+
+/* focus style */
+input:focus{
+  outline:none;
+  border-color:var(--pink-d);
+  box-shadow:0 0 0 3px #f4b8c140;
+}
+
+/* ───── BUTTONS ───── */
+.buttons{
+  display:flex;
+  gap:10px;
+  margin-top:20px;
+}
+
+button{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-family:'Press Start 2P';
+  font-size:10px;
+  cursor:pointer;
+}
+
+.login{
+  background:var(--pink);
+  box-shadow:0 4px 0 var(--pink-d);
+}
+
+.signup{
+  background:var(--sage);
+  box-shadow:0 4px 0 var(--sage-d);
+}
+
+button:active{
+  transform:translateY(2px);
+  box-shadow:none;
+}
+
+/* ───── FOOTER ───── */
+.footer-note {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+.footer-note a {
+  color: var(--pink-d);
+  text-decoration: none;
+  font-weight: 700;
+}
+.footer-note a:hover { text-decoration: underline; }
+
