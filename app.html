@@ -453,47 +453,7 @@ async function loadBudget() {
 
   document.getElementById("analysisText").textContent = message;
 
-  // 📊 FAKE monthly comparison (for now)
-  const thisMonth = totalSpent;
-  const lastMonth = totalSpent * 0.75; // simulate previous month
-
-  document.getElementById("thisMonth").textContent = "$" + Math.round(thisMonth);
-  document.getElementById("lastMonth").textContent = "$" + Math.round(lastMonth);
-
-  // change calc
-  const diff = thisMonth - lastMonth;
-  const percentChange = lastMonth > 0 ? (diff / lastMonth) * 100 : 0;
-
-  let changeText = "";
-
-  if (diff > 0) {
-    changeText = "↑ $" + Math.round(diff) + " (" + Math.round(percentChange) + "%)";
-  } else {
-    changeText = "↓ $" + Math.abs(Math.round(diff)) + " (" + Math.round(percentChange) + "%)";
-  }
-
-  document.getElementById("changeText").textContent = changeText;
-
-  // 🏆 TOP CATEGORY (basic version)
-  let topCategory = "essential";
-  if (optional > essential) topCategory = "optional";
-
-  document.getElementById("topCategory").textContent = topCategory;
-
-  // 🧠 INSIGHT MESSAGE
-  let note = "";
-
-  if (diff > 0) {
-    note = "You're spending more than last month 📈";
-  } else {
-    note = "Nice! You reduced spending this month 🌿";
-  }
-
-  if (optional > essential) {
-    note += " — watch your fun spending 👀";
-  }
-
-  document.getElementById("insightNote").textContent = note;
+  
 }
 
 // quote
@@ -533,6 +493,45 @@ async function loadRewards() {
 
   document.getElementById("itemsText").innerText =
     `${stage} item${stage > 1 ? "s" : ""} unlocked`;
+}
+
+async function loadInsights() {
+  const res = await fetch(API_URL + "/insights/monthly", {
+    headers: { "Authorization": "Bearer " + token }
+  });
+
+  const data = await res.json();
+
+  const thisMonth = data.this_month || 0;
+  const lastMonth = data.last_month || 0;
+
+  document.getElementById("thisMonth").textContent = "$" + thisMonth;
+  document.getElementById("lastMonth").textContent = "$" + lastMonth;
+
+  // change
+  const diff = thisMonth - lastMonth;
+  const percent = lastMonth > 0 ? (diff / lastMonth) * 100 : 0;
+
+  let changeText = diff >= 0
+    ? `↑ $${diff} (${Math.round(percent)}%)`
+    : `↓ $${Math.abs(diff)} (${Math.round(percent)}%)`;
+
+  document.getElementById("changeText").textContent = changeText;
+
+  // top category
+  document.getElementById("topCategory").textContent =
+    data.top_category || "-";
+
+  // insight message
+  let note = "";
+
+  if (diff > 0) {
+    note = "You're spending more than last month 📈";
+  } else {
+    note = "Nice! You reduced spending this month 🌿";
+  }
+
+  document.getElementById("insightNote").textContent = note;
 }
 
 // load on start

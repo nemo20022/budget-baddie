@@ -13,7 +13,7 @@ import os
 import json
 import firebase_admin
 from firebase_admin import credentials, auth
-
+from sqlalchemy import extract, func
 firebase_key = os.getenv("FIREBASE_KEY")
 
 if firebase_key:
@@ -408,4 +408,50 @@ def monthly_summary(user=Depends(verify_token), db=Depends(get_db)):
             if difference > 0
             else f"You spent {abs(difference)} more 💸"
         )
+    }
+    
+    
+@app.get("/insights/monthly")
+def get_monthly_insights(
+    current_user=Depends(verify_token),
+    db=Depends(get_db)
+):
+    now = datetime.now()
+
+    this_month = now.month
+    last_month = this_month - 1 if this_month > 1 else 12
+
+    this_year = now.year
+    last_year = this_year if this_month > 1 else this_year - 1
+
+    # THIS MONTH TOTAL
+    this_total = db.query(func.sum(Expense.amount)).filter(
+        Expense.user_id == current_user.id,
+        extract('month', Expense.date) == this_month,
+        extract('year', Expense.date) == this_year
+    ).scalar() or 0
+
+    # LAST MONTH TOTAL
+    last_total = db.query(func.sum(Expense.amount)).filter(
+        Expense.user_id == current_user.id,
+        extract('month', Expense.date) == last_month,
+        extract('year', Expense.date) == last_year
+    ).scalar() or 0
+
+    # TOP CATEGORY (THIS MONTH)
+    top_category = db.query(
+        Expense.category_name,
+        func.sum(Expense.amount).label("total")
+    ).filter(
+        Expense.user_id == current_user.id,
+        extract('month', Expense.date) == this_month,
+        extract('year', Expense.date) == this_year
+    ).group_by(Expense.category_name)\
+     .order_by(func.sum(Expense.amount).desc())\
+     .first()
+
+    return {
+        "this_month": this_total,
+        "last_month": last_total,
+        "top_category": top_category[0] if top_category else None
     }
