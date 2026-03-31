@@ -387,7 +387,7 @@ async function loadBudget() {
   document.getElementById("optionalText").textContent = "$" + optional;
 
   const budget = data.budget || 0;
-  const percent = budget > 0 ? (totalSpent / budget) * 100 : 0;
+  const percent = budget > 0 ? (optional / budget) * 100 : 0;
 
   document.getElementById("progressBar").style.width = percent + "%";
   document.getElementById("progressPercent").textContent = Math.round(percent) + "% spent";
