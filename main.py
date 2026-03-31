@@ -413,42 +413,55 @@ def monthly_summary(user=Depends(verify_token), db=Depends(get_db)):
     
 @app.get("/insights/monthly")
 def get_monthly_insights(
-    current_user=Depends(verify_token),
+    user=Depends(verify_token),
     db=Depends(get_db)
 ):
+    # ✅ get firebase uid
+    firebase_uid = user["uid"]
+
+    # ✅ get actual DB user
+    db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
     now = datetime.now()
 
     this_month = now.month
-    last_month = this_month - 1 if this_month > 1 else 12
-
     this_year = now.year
+
+    last_month = this_month - 1 if this_month > 1 else 12
     last_year = this_year if this_month > 1 else this_year - 1
 
-    # THIS MONTH TOTAL
+    # ✅ THIS MONTH TOTAL
     this_total = db.query(func.sum(Expense.amount)).filter(
-        Expense.user_id == current_user.id,
+        Expense.user_id == db_user.id,
         extract('month', Expense.date) == this_month,
         extract('year', Expense.date) == this_year
     ).scalar() or 0
 
-    # LAST MONTH TOTAL
+    # ✅ LAST MONTH TOTAL
     last_total = db.query(func.sum(Expense.amount)).filter(
-        Expense.user_id == current_user.id,
+        Expense.user_id == db_user.id,
         extract('month', Expense.date) == last_month,
         extract('year', Expense.date) == last_year
     ).scalar() or 0
 
-    # TOP CATEGORY (THIS MONTH)
+    # ✅ TOP CATEGORY (FIXED WITH JOIN)
     top_category = db.query(
-        Expense.category_name,
+        Category.name,
         func.sum(Expense.amount).label("total")
+    ).join(
+        Category, Expense.category_id == Category.id
     ).filter(
-        Expense.user_id == current_user.id,
+        Expense.user_id == db_user.id,
         extract('month', Expense.date) == this_month,
         extract('year', Expense.date) == this_year
-    ).group_by(Expense.category_name)\
-     .order_by(func.sum(Expense.amount).desc())\
-     .first()
+    ).group_by(
+        Category.name
+    ).order_by(
+        func.sum(Expense.amount).desc()
+    ).first()
 
     return {
         "this_month": this_total,
