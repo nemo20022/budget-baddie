@@ -427,7 +427,7 @@ async function loadBudget() {
 
   // 🧠 SMART ANALYSIS
   let message = "";
-  let percentUsed = budget > 0 ? (totalSpent / budget) * 100 : 0;
+  let percentUsed = income > 0 ? (totalSpent / budget) * 100 : 0;
 
   if (percentUsed < 50) {
     message = "🌱 You're doing amazing! You're well under budget.";
