@@ -679,3 +679,39 @@
   left: 8px;
   font-size: 16px;
 }
+
+/* ═════════════════ SUMMARY ═════════════════ */
+.card-summary {
+  border-color: var(--border3);
+  background: var(--card3);
+}
+
+.card-summary::before {
+  background: linear-gradient(90deg, var(--sage), var(--pink));
+}
+
+.summary-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background: var(--cream);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--text);
+}
+
+.summary-row.highlight {
+  background: linear-gradient(135deg, var(--sage-l), var(--pink-l));
+  border-color: var(--sage-d);
+}

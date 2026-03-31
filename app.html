@@ -219,6 +219,37 @@
       </p>
     </div>
 
+
+    <!-- SUMMARY -->
+<div class="card card-summary">
+  <div class="card-title">
+    <span class="icon">📊</span>
+    Summary
+  </div>
+
+  <div class="summary-box">
+      <div class="summary-row">
+        <span>Total Spent</span>
+        <span id="summaryTotal">$0</span>
+      </div>
+
+      <div class="summary-row">
+        <span>Essential</span>
+        <span id="summaryEssential">$0</span>
+      </div>
+
+      <div class="summary-row">
+        <span>Optional</span>
+        <span id="summaryOptional">$0</span>
+      </div>
+
+      <div class="summary-row highlight">
+        <span>Remaining</span>
+        <span id="summaryRemaining">$0</span>
+      </div>
+    </div>
+  </div>
+
   </div>
 </main>
 <script>
@@ -334,6 +365,12 @@ async function loadBudget() {
   document.getElementById("progressBar").style.width = percent + "%";
   document.getElementById("progressPercent").textContent = Math.round(percent) + "% spent";
   document.getElementById("budgetLabel").textContent = "Budget: $" + budget;
+
+  // ✅ update summary UI
+  document.getElementById("summaryTotal").textContent = "$" + totalSpent;
+  document.getElementById("summaryEssential").textContent = "$" + essential;
+  document.getElementById("summaryOptional").textContent = "$" + optional;
+  document.getElementById("summaryRemaining").textContent = "$" + remaining;
 }
 
 // quote
