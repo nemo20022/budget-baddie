@@ -370,3 +370,42 @@ def get_stage(user=Depends(verify_token), db=Depends(get_db)):
         "stage": stage,
         "completed_goals": completed_goals
     }
+    
+@app.get("/stats/summary")
+def monthly_summary(user=Depends(verify_token), db=Depends(get_db)):
+    from datetime import datetime
+
+    firebase_uid = user["uid"]
+    db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+
+    now = datetime.now()
+    this_month = now.month
+    this_year = now.year
+
+    last_month = this_month - 1 if this_month > 1 else 12
+    last_month_year = this_year if this_month > 1 else this_year - 1
+
+    expenses = db.query(Expense).filter(Expense.user_id == db_user.id).all()
+
+    this_total = sum(
+        e.amount for e in expenses
+        if e.date.month == this_month and e.date.year == this_year
+    )
+
+    last_total = sum(
+        e.amount for e in expenses
+        if e.date.month == last_month and e.date.year == last_month_year
+    )
+
+    difference = last_total - this_total
+
+    return {
+        "this_month": this_total,
+        "last_month": last_total,
+        "difference": difference,
+        "message": (
+            f"You saved {difference} 🎉"
+            if difference > 0
+            else f"You spent {abs(difference)} more 💸"
+        )
+    }
