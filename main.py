@@ -353,11 +353,8 @@ def get_stage(user=Depends(verify_token), db=Depends(get_db)):
     ).count()
 
     # stage system (max 5)
-    # stage = min(completed_goals, 5)
+    stage = min(completed_goals, 5)
     
-    # test stage
-    stage = 4
-
     return {
         "stage": stage,
         "completed_goals": completed_goals
