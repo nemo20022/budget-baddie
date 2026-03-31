@@ -706,3 +706,50 @@
 .analysis-good { color: var(--sage-d); }
 .analysis-warn { color: #e6a23c; }
 .analysis-bad  { color: #e57373; }
+
+
+.card-insights {
+  border-color: var(--border);
+  background: var(--card);
+}
+
+.card-insights::before {
+  background: linear-gradient(90deg, var(--lavender), var(--pink));
+}
+
+.insight-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.insight-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background: var(--cream);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+}
+
+.insight-row.highlight {
+  background: linear-gradient(135deg, var(--lavender), var(--pink-l));
+}
+
+.insight-divider {
+  height: 2px;
+  background: var(--border);
+  margin: 6px 0;
+}
+
+.insight-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
