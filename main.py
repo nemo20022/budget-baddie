@@ -9,12 +9,17 @@ from fastapi.middleware.cors import CORSMiddleware
 import requests
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Depends, HTTPException, status
-
+import os
+import json
 import firebase_admin
 from firebase_admin import credentials, auth
 
-cred = credentials.Certificate("budget-baddie-firebase-adminsdk-fbsvc-7dbf5e87f3.json")
-firebase_admin.initialize_app(cred)
+firebase_key = os.getenv("FIREBASE_KEY")
+
+if firebase_key:
+    cred_dict = json.loads(firebase_key)
+    cred = credentials.Certificate(cred_dict)
+    firebase_admin.initialize_app(cred)
 
 security = HTTPBearer()
 
@@ -23,6 +28,12 @@ def verify_token(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     token = credentials.credentials
+
+    if not firebase_admin._apps:
+        raise HTTPException(
+            status_code=500,
+            detail="Firebase not initialized",
+        )
 
     try:
         decoded_token = auth.verify_id_token(token)
