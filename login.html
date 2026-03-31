@@ -95,6 +95,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } 
 from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+const API_URL = "https://budget-baddie-production.up.railway.app"; // 🔥 CHANGE THIS
+
 const firebaseConfig = {
   apiKey: "AIzaSyBKY1pPnizluRzTfUPv5ecXdJUc9MgvDDU",
   authDomain: "budget-baddie.firebaseapp.com",
@@ -120,7 +122,8 @@ window.login = async () => {
 
     localStorage.setItem("token", token);
 
-    await fetch("http://127.0.0.1:8000/users/sync", {
+    // 🔥 ONLY CHANGE HERE
+    await fetch(API_URL + "/users/sync", {
       method: "POST",
       headers: { "Authorization": "Bearer " + token }
     });

@@ -221,7 +221,9 @@
 
   </div>
 </main>
- <script>
+<script>
+const API_URL = "https://budget-baddie-production.up.railway.app"; // 🔥 CHANGE THIS
+
 const token = localStorage.getItem("token");
 
 // redirect if not logged in
@@ -235,11 +237,9 @@ function parseJwt(token) {
   return JSON.parse(atob(base64));
 }
 
-
-// ✅ SET USER EMAIL
+// set user email
 const userData = parseJwt(token);
 document.getElementById("userEmail").textContent = userData.email;
-
 
 // logout
 function logout() {
@@ -247,11 +247,9 @@ function logout() {
   window.location.href = "login.html";
 }
 
-
-
 // set budget
 async function setBudget() {
-  const res = await fetch("http://127.0.0.1:8000/budget", {
+  const res = await fetch(API_URL + "/budget", {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + token,
@@ -263,24 +261,21 @@ async function setBudget() {
     })
   });
 
-  // ✅ HANDLE ERRORS
   if (!res.ok) {
     const err = await res.text();
     alert("Error saving budget: " + err);
     return;
   }
 
-  // ✅ CLEAR INPUTS (optional but good UX)
   document.getElementById("income").value = "";
   document.getElementById("allowance").value = "";
 
-  // ✅ reload data AFTER success
   loadBudget();
 }
 
 // add expense
 async function addExpense() {
-  const res = await fetch("http://127.0.0.1:8000/expenses", {
+  const res = await fetch(API_URL + "/expenses", {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + token,
@@ -294,55 +289,32 @@ async function addExpense() {
     })
   });
 
-  // ✅ HANDLE ERRORS
   if (!res.ok) {
     const err = await res.text();
     alert("Error adding expense: " + err);
     return;
   }
 
-  // ✅ CLEAR INPUTS (important UX + prevents duplicate sends)
   document.getElementById("amount").value = "";
   document.getElementById("category").value = "";
   document.getElementById("date").value = "";
   document.getElementById("type").value = "optional";
 
-  // ✅ reload data AFTER success
   loadBudget();
 }
 
-// load data
+// load budget
 async function loadBudget() {
-  const res = await fetch("http://127.0.0.1:8000/budget/remaining", {
+  const res = await fetch(API_URL + "/budget/remaining", {
     headers: { "Authorization": "Bearer " + token }
   });
 
-  // ✅ HANDLE API ERROR
-  if (!res.ok) {
-    const err = await res.text();
-    console.error("Load error:", err);
-    return;
-  }
+  if (!res.ok) return;
 
   const data = await res.json();
 
-  // ✅ HANDLE BACKEND ERROR RESPONSE
-  if (data.error) {
-    console.warn(data.error);
+  if (data.error) return;
 
-    document.getElementById("incomeText").textContent = "$0";
-    document.getElementById("spentText").textContent = "$0";
-    document.getElementById("remainingText").textContent = "$0";
-    document.getElementById("essentialText").textContent = "$0";
-    document.getElementById("optionalText").textContent = "$0";
-    document.getElementById("progressBar").style.width = "0%";
-    document.getElementById("progressPercent").textContent = "0% spent";
-    document.getElementById("budgetLabel").textContent = "Budget: $0";
-
-    return;
-  }
-
-  // ✅ SAFE FALLBACKS (prevents NaN)
   const income = data.income || 0;
   const essential = data.essential_spent || 0;
   const optional = data.optional_spent || 0;
@@ -350,51 +322,38 @@ async function loadBudget() {
 
   const totalSpent = essential + optional;
 
-  // ✅ UPDATE UI
   document.getElementById("incomeText").textContent = "$" + income;
   document.getElementById("spentText").textContent = "$" + totalSpent;
   document.getElementById("remainingText").textContent = "$" + remaining;
   document.getElementById("essentialText").textContent = "$" + essential;
   document.getElementById("optionalText").textContent = "$" + optional;
 
-  // ✅ SAFE PROGRESS CALC
   const budget = data.budget || 0;
-
-  // prevent division by zero
   const percent = budget > 0 ? (totalSpent / budget) * 100 : 0;
 
-  if (percent > 100) {
-  document.getElementById("progressBar").style.background = "red";
-  }
   document.getElementById("progressBar").style.width = percent + "%";
   document.getElementById("progressPercent").textContent = Math.round(percent) + "% spent";
-
   document.getElementById("budgetLabel").textContent = "Budget: $" + budget;
-  }
+}
 
+// quote
 async function loadQuote() {
-  const res = await fetch("http://127.0.0.1:8000/quote");
+  const res = await fetch(API_URL + "/quote");
   const data = await res.json();
 
   document.getElementById("quoteText").textContent =
     `"${data.quote}" — ${data.author}`;
 }
 
-
+// rewards
 async function loadRewards() {
-  const token = localStorage.getItem("token");
-
-  const res = await fetch("http://127.0.0.1:8000/rewards", {
-    headers: {
-      "Authorization": "Bearer " + token
-    }
+  const res = await fetch(API_URL + "/rewards", {
+    headers: { "Authorization": "Bearer " + token }
   });
 
   const data = await res.json();
-
   const stage = data.stage;
 
-  // ✅ stage names (ADD THIS HERE)
   const names = [
     "Empty Room",
     "Starter Den",
@@ -404,13 +363,11 @@ async function loadRewards() {
     "Ultimate Baddie Room"
   ];
 
-  // show unlocked items
   for (let i = 1; i <= stage; i++) {
     const el = document.getElementById("reward" + i);
     if (el) el.style.display = "block";
   }
 
-  // update UI text
   document.getElementById("levelText").innerText =
     `🌱 Level ${stage} ${names[stage]}`;
 
@@ -422,8 +379,6 @@ async function loadRewards() {
 loadBudget();
 loadQuote();
 loadRewards();
-
-
 </script>
 </body>
 </html>
