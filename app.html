@@ -7,6 +7,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
   
   <link rel="stylesheet" href="app.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
  
@@ -221,32 +223,27 @@
 
 
     <!-- SUMMARY -->
-<div class="card card-summary">
-  <div class="card-title">
-    <span class="icon">📊</span>
-    Summary
-  </div>
+  <div class="card card-summary">
+    <div class="card-title">
+      <span class="icon">📊</span>
+      Summary
+    </div>
 
-  <div class="summary-box">
-      <div class="summary-row">
-        <span>Total Spent</span>
-        <span id="summaryTotal">$0</span>
-      </div>
+    <!-- ANALYSIS -->
+  <div class="card card-summary">
+    <div class="card-title">
+      <span class="icon">📊</span>
+      Spending Analysis
+    </div>
 
-      <div class="summary-row">
-        <span>Essential</span>
-        <span id="summaryEssential">$0</span>
-      </div>
+    <!-- PIE CHART -->
+    <div class="pie-wrap">
+      <canvas id="pieChart"></canvas>
+    </div>
 
-      <div class="summary-row">
-        <span>Optional</span>
-        <span id="summaryOptional">$0</span>
-      </div>
-
-      <div class="summary-row highlight">
-        <span>Remaining</span>
-        <span id="summaryRemaining">$0</span>
-      </div>
+    <!-- INSIGHTS -->
+    <div class="analysis-box">
+      <div id="analysisText">Analyzing your spending...</div>
     </div>
   </div>
 
@@ -366,11 +363,65 @@ async function loadBudget() {
   document.getElementById("progressPercent").textContent = Math.round(percent) + "% spent";
   document.getElementById("budgetLabel").textContent = "Budget: $" + budget;
 
-  // ✅ update summary UI
-  document.getElementById("summaryTotal").textContent = "$" + totalSpent;
-  document.getElementById("summaryEssential").textContent = "$" + essential;
-  document.getElementById("summaryOptional").textContent = "$" + optional;
-  document.getElementById("summaryRemaining").textContent = "$" + remaining;
+    // 🎯 PIE CHART
+  const ctx = document.getElementById("pieChart");
+
+  if (window.myChart) {
+    window.myChart.destroy();
+  }
+
+  window.myChart = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: ["Essential", "Optional"],
+      datasets: [{
+        data: [essential, optional],
+        backgroundColor: ["#a8c5a0", "#f4b8c1"],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      plugins: {
+        legend: {
+          labels: {
+            font: {
+              family: "'Press Start 2P'",
+              size: 8
+            }
+          }
+        }
+      }
+    }
+  });
+
+
+  // 🧠 SMART ANALYSIS
+  let message = "";
+  let percentUsed = budget > 0 ? (totalSpent / budget) * 100 : 0;
+
+  if (percentUsed < 50) {
+    message = "🌱 You're doing amazing! You're well under budget.";
+    document.getElementById("analysisText").className = "analysis-good";
+  }
+  else if (percentUsed < 80) {
+    message = "✨ You're doing okay, but keep an eye on spending.";
+    document.getElementById("analysisText").className = "analysis-warn";
+  }
+  else if (percentUsed <= 100) {
+    message = "⚠️ You're close to your limit. Be careful!";
+    document.getElementById("analysisText").className = "analysis-warn";
+  }
+  else {
+    message = "🚨 You went over budget. Time to reset and refocus.";
+    document.getElementById("analysisText").className = "analysis-bad";
+  }
+
+  // extra insight
+  if (optional > essential) {
+    message += " You're spending more on wants than needs 👀";
+  }
+
+  document.getElementById("analysisText").textContent = message;
 }
 
 // quote
