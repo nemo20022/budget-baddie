@@ -1,21 +1,27 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, status
 from database import engine
 import models
 from database import SessionLocal
 from models import User, Expense, Budget, Goal, Category, Reward, UserReward
 from models import ExpenseRequest, BudgetRequest
 from datetime import datetime
+
+#comunication between frontend and backend
 from fastapi.middleware.cors import CORSMiddleware
+
+#external api
 import requests
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi import Depends, HTTPException, status
 import os
+
+#convert firebase key
 import json
 import firebase_admin
 from firebase_admin import credentials, auth
 from sqlalchemy import extract, func
 firebase_key = os.getenv("FIREBASE_KEY")
 
+#connects backend to firebase
 if firebase_key:
     cred_dict = json.loads(firebase_key)
     cred = credentials.Certificate(cred_dict)
