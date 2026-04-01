@@ -13,18 +13,35 @@
 <body>
 
 <script>
-for(let i=0;i<60;i++){
-  let p=document.createElement("div");
-  p.className="pixel";
 
+// =========================
+// BACKGROUND PIXEL EFFECT
+// =========================
+
+// Create 60 floating pixel elements
+for(let i=0;i<60;i++){
+  let p=document.createElement("div"); // create a div element
+  p.className="pixel"; // assign CSS class
+
+  // Set random horizontal position
   p.style.left=Math.random()*100+"%";
+
+  // Set random size (width and height)
   p.style.width=p.style.height=(4+Math.random()*6)+"px";
+
+  // Assign random color from predefined list
   p.style.background=["#f4b8c1","#a8c5a0","#c4a882","#e896a4"][Math.floor(Math.random()*4)];
+
+  // Set animation duration (how long it moves)
   p.style.animationDuration=(8+Math.random()*8)+"s";
+
+  // Set animation delay (when it starts)
   p.style.animationDelay=Math.random()*6+"s";
 
+  // Add pixel element to the page
   document.body.appendChild(p);
 }
+
 </script>
 
 <!-- WRAP ADDED -->
@@ -91,50 +108,88 @@ for(let i=0;i<60;i++){
 
 <!-- FIREBASE (UNCHANGED) -->
 <script type="module">
+
+// =========================
+// FIREBASE IMPORTS
+// =========================
+
+// Import Firebase core and authentication functions
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } 
 from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+// =========================
+// CONFIGURATION
+// =========================
+
+// Backend API URL
 const API_URL = "https://budget-baddie-production.up.railway.app"; // 🔥 CHANGE THIS
 
+// Firebase project configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBKY1pPnizluRzTfUPv5ecXdJUc9MgvDDU",
   authDomain: "budget-baddie.firebaseapp.com",
   projectId: "budget-baddie",
 };
 
+// =========================
+// INITIALIZATION
+// =========================
+
+// Initialize Firebase app
 const app = initializeApp(firebaseConfig);
+
+// Initialize Firebase authentication
 const auth = getAuth(app);
 
+// =========================
+// SIGN UP FUNCTION
+// =========================
+
+// Create a new user account using email and password
 window.signUp = async () => {
   try {
+    // Firebase signup request
     await createUserWithEmailAndPassword(auth, email.value, password.value);
+
+    // Show success message
     alert("Signup successful!");
   } catch (e) {
+    // Show error message if signup fails
     alert(e.message);
   }
 };
 
+// =========================
+// LOGIN FUNCTION
+// =========================
+
+// Authenticate user and connect with backend
 window.login = async () => {
   try {
+    // Sign in user with Firebase
     const user = await signInWithEmailAndPassword(auth, email.value, password.value);
+
+    // Get authentication token from Firebase
     const token = await user.user.getIdToken();
 
+    // Store token in browser local storage
     localStorage.setItem("token", token);
 
-    // 🔥 ONLY CHANGE HERE
+    // Send token to backend to sync user in database
     await fetch(API_URL + "/users/sync", {
       method: "POST",
       headers: { "Authorization": "Bearer " + token }
     });
 
+    // Redirect user to dashboard page
     window.location.href = "index.html";
 
   } catch (e) {
+    // Show error if login fails
     alert(e.message);
   }
 };
 </script>
-
 </body>
 </html>

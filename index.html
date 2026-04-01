@@ -280,32 +280,52 @@
   </div>
 </main>
 <script>
+
+// =========================
+// CONFIG + AUTH
+// =========================
+
+// Backend API URL
 const API_URL = "https://budget-baddie-production.up.railway.app"; // 🔥 CHANGE THIS
 
+// Get stored auth token
 const token = localStorage.getItem("token");
 
-// redirect if not logged in
+// Redirect if user is not logged in
 if (!token) {
   window.location.href = "login.html";
 }
 
+// =========================
+// JWT PARSING (GET USER INFO)
+// =========================
+
+// Decode JWT token to extract user data (like email)
 function parseJwt(token) {
   const base64Url = token.split('.')[1];
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
   return JSON.parse(atob(base64));
 }
 
-// set user email
+// Set user email in UI
 const userData = parseJwt(token);
 document.getElementById("userEmail").textContent = userData.email;
 
-// logout
+// =========================
+// LOGOUT
+// =========================
+
+// Remove token and redirect to login page
 function logout() {
   localStorage.removeItem("token");
   window.location.href = "login.html";
 }
 
-// set budget
+// =========================
+// SET BUDGET (POST REQUEST)
+// =========================
+
+// Sends income and allowance to backend
 async function setBudget() {
   const res = await fetch(API_URL + "/budget", {
     method: "POST",
@@ -319,19 +339,26 @@ async function setBudget() {
     })
   });
 
+  // Handle error response
   if (!res.ok) {
     const err = await res.text();
     alert("Error saving budget: " + err);
     return;
   }
 
+  // Reset input fields after saving
   document.getElementById("income").value = "";
   document.getElementById("allowance").value = "";
 
+  // Reload updated data
   loadBudget();
 }
 
-// add expense
+// =========================
+// ADD EXPENSE (POST REQUEST)
+// =========================
+
+// Sends expense data to backend
 async function addExpense() {
   const res = await fetch(API_URL + "/expenses", {
     method: "POST",
@@ -347,21 +374,28 @@ async function addExpense() {
     })
   });
 
+  // Handle error response
   if (!res.ok) {
     const err = await res.text();
     alert("Error adding expense: " + err);
     return;
   }
 
+  // Reset form fields after submission
   document.getElementById("amount").value = "";
   document.getElementById("category").value = "";
   document.getElementById("date").value = "";
   document.getElementById("type").value = "optional";
 
+  // Reload updated data
   loadBudget();
 }
 
-// load budget
+// =========================
+// LOAD BUDGET DATA
+// =========================
+
+// Fetch and display budget and spending info
 async function loadBudget() {
   const res = await fetch(API_URL + "/budget/remaining", {
     headers: { "Authorization": "Bearer " + token }
@@ -373,6 +407,7 @@ async function loadBudget() {
 
   if (data.error) return;
 
+  // Extract values with fallback defaults
   const income = data.income || 0;
   const essential = data.essential_spent || 0;
   const optional = data.optional_spent || 0;
@@ -380,26 +415,34 @@ async function loadBudget() {
 
   const totalSpent = essential + optional;
 
+  // Update UI values
   document.getElementById("incomeText").textContent = "$" + income;
   document.getElementById("spentText").textContent = "$" + totalSpent;
   document.getElementById("remainingText").textContent = "$" + remaining;
   document.getElementById("essentialText").textContent = "$" + essential;
   document.getElementById("optionalText").textContent = "$" + optional;
 
+  // Calculate percentage of budget used
   const budget = data.budget || 0;
   const percent = budget > 0 ? (optional / budget) * 100 : 0;
 
+  // Update progress bar
   document.getElementById("progressBar").style.width = percent + "%";
   document.getElementById("progressPercent").textContent = Math.round(percent) + "% spent";
   document.getElementById("budgetLabel").textContent = "Budget: $" + budget;
 
-    // 🎯 PIE CHART
+  // =========================
+  // PIE CHART (Chart.js)
+  // =========================
+
   const ctx = document.getElementById("pieChart");
 
+  // Destroy previous chart to avoid duplication
   if (window.myChart) {
     window.myChart.destroy();
   }
 
+  // Create new pie chart
   window.myChart = new Chart(ctx, {
     type: "pie",
     data: {
@@ -424,8 +467,10 @@ async function loadBudget() {
     }
   });
 
+  // =========================
+  // SPENDING ANALYSIS LOGIC
+  // =========================
 
-  // 🧠 SMART ANALYSIS
   let message = "";
   let percentUsed = income > 0 ? (totalSpent / budget) * 100 : 0;
 
@@ -446,17 +491,19 @@ async function loadBudget() {
     document.getElementById("analysisText").className = "analysis-bad";
   }
 
-  // extra insight
+  // Extra insight based on spending type
   if (optional > essential) {
     message += " You're spending more on wants than needs 👀";
   }
 
   document.getElementById("analysisText").textContent = message;
-
-  
 }
 
-// quote
+// =========================
+// LOAD QUOTE
+// =========================
+
+// Fetch motivational quote from backend
 async function loadQuote() {
   const res = await fetch(API_URL + "/quote");
   const data = await res.json();
@@ -465,7 +512,11 @@ async function loadQuote() {
     `"${data.quote}" — ${data.author}`;
 }
 
-// rewards
+// =========================
+// REWARDS SYSTEM
+// =========================
+
+// Show unlocked rewards based on user progress
 async function loadRewards() {
   const res = await fetch(API_URL + "/rewards", {
     headers: { "Authorization": "Bearer " + token }
@@ -483,11 +534,13 @@ async function loadRewards() {
     "Ultimate Baddie Room"
   ];
 
+  // Display reward items up to current stage
   for (let i = 1; i <= stage; i++) {
     const el = document.getElementById("reward" + i);
     if (el) el.style.display = "block";
   }
 
+  // Update level and items text
   document.getElementById("levelText").innerText =
     `🌱 Level ${stage} ${names[stage]}`;
 
@@ -495,6 +548,11 @@ async function loadRewards() {
     `${stage} item${stage > 1 ? "s" : ""} unlocked`;
 }
 
+// =========================
+// MONTHLY INSIGHTS
+// =========================
+
+// Fetch and display monthly comparison data
 async function loadInsights() {
   const res = await fetch(API_URL + "/insights/monthly", {
     headers: { "Authorization": "Bearer " + token }
@@ -508,7 +566,7 @@ async function loadInsights() {
   document.getElementById("thisMonth").textContent = "$" + thisMonth;
   document.getElementById("lastMonth").textContent = "$" + lastMonth;
 
-  // change
+  // Calculate difference and percentage change
   const diff = thisMonth - lastMonth;
   const percent = lastMonth > 0 ? (diff / lastMonth) * 100 : 0;
 
@@ -518,11 +576,11 @@ async function loadInsights() {
 
   document.getElementById("changeText").textContent = changeText;
 
-  // top category
+  // Display top category
   document.getElementById("topCategory").textContent =
     data.top_category || "-";
 
-  // insight message
+  // Generate insight message
   let note = "";
 
   if (diff > 0) {
@@ -534,11 +592,16 @@ async function loadInsights() {
   document.getElementById("insightNote").textContent = note;
 }
 
-// load on start
+// =========================
+// INITIAL LOAD
+// =========================
+
+// Run all functions when page loads
 loadBudget();
 loadQuote();
 loadRewards();
 loadInsights();
+
 </script>
 </body>
 </html>
